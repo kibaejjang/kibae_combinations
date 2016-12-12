@@ -1,0 +1,163 @@
+#include<stdio.h>
+#include<malloc.h>
+#include<string.h>
+
+const int wsize = 10;
+
+int init_stack(int *TOP);
+int push(char **S, int R, int *TOP, char *VAL);
+char *pop(char **S, int *TOP);
+int print_stack(char **S, int TOP);
+
+int combination_nodes(char **nodes, int N, int R);
+
+int main()
+{
+        // dummy variables //
+        int i, j;
+
+
+        ////////////////////////////
+        // combination from nodes //
+        ////////////////////////////
+
+        // variables //
+        int non;
+        char **a;
+
+        // memory allocation //
+        non = 5;
+        a = (char**)calloc(non, sizeof(char*));
+        for(i=0; i<non; i++)
+                a[i] = (char*)calloc(wsize, sizeof(char));
+
+        // define nodes //
+        sprintf(a[0], "a");
+        sprintf(a[1], "b");
+        sprintf(a[2], "c");
+        sprintf(a[3], "d");
+        sprintf(a[4], "e");
+
+        // combination implementation //
+        printf("combination from nodes\n");
+        combination_nodes(a, non, 4);
+
+        // reset and return //
+        for(i=0; i<non; i++)
+                free(a[i]);
+        free(a);
+				
+				return 0;
+}
+
+
+int init_stack(int *TOP)
+{
+        *TOP = 0;
+        return 0;
+}
+
+
+int push(char **S, int R, int *TOP, char *VAL)
+{
+        if(*TOP > R-1)
+                printf("error: stack overflow\n");
+
+        else
+                strcpy(S[(*TOP)++], VAL);
+
+        return 0;
+}
+
+
+char *pop(char **S, int *TOP)
+{
+        if(*TOP <= 0) {
+                printf("error: stack underflow\n");
+                return 0;
+        }
+
+        else {
+                char *output;
+                output = (char*)calloc(wsize, sizeof(char));
+                strcpy(output, S[--(*TOP)]);
+                sprintf(S[*TOP], "NA");
+                return output;
+        }
+}
+
+
+int print_stack(char **S, int TOP)
+{
+        if(TOP <= 0)    printf("error: no objects in stack\n");
+
+        else {
+                int j;
+                for(j=0; j<TOP-1; j++)  printf("%s\t", S[j]);
+                printf("%s\n", S[j]);
+        }
+
+        return 0;
+}
+
+
+int combination_nodes(char **nodes, int N, int R)
+{
+        // variables //
+        int dum;
+        int i, j, k;
+
+        int top;
+        char **stack;
+        int *index;
+
+        stack = (char**)calloc(R, sizeof(char*));
+        for(i=0; i<R; i++)
+                stack[i] = (char*)calloc(wsize, sizeof(char));
+
+        index = (int*)calloc(R, sizeof(int));
+
+        // implementation //
+        init_stack(&top);
+        dum = 0;
+        i = 0;
+
+        while(1) {
+                index[top] = i;
+                push(stack, R, &top, nodes[i]);
+
+                if(top == R) {
+                        print_stack(stack, top);
+
+                        if(index[top-1] < N-1)  pop(stack, &top);
+
+                        else {
+                                for(k=0; k<R; k++) {
+                                        if(index[R-1-k] < N-k-1)        break;
+                                        else                            pop(stack, &top);
+                                }
+
+                                if(top!=0) {
+                                        pop(stack, &top);
+                                        i = index[top];
+                                }
+
+
+                                else    if(index[top] >= N-R)   dum++;
+                        }
+                }
+                i++;
+
+                if(dum > 0)     break;
+        }
+
+        // reset and return //
+        free(index);
+
+        for(i=0; i<R; i++)
+                free(stack[i]);
+        free(stack);
+
+        return 0;
+}
+
