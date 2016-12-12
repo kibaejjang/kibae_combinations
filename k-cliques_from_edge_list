@@ -1,0 +1,374 @@
+#include<stdio.h>
+#include<malloc.h>
+#include<string.h>
+
+const int wsize = 10;
+
+int init_stack(int *TOP);
+int push(char **S, int R, int *TOP, char *VAL);
+char *pop(char **S, int *TOP);
+int print_stack(char **S, int TOP);
+
+int combination_nodes(char **nodes, int N, int R);
+int cliques_links(char ***links, int L, int R);
+
+
+int main()
+{
+        // dummy variables //
+        int i, j;
+
+
+        ////////////////////////////
+        // combination from nodes //
+        ////////////////////////////
+
+        // variables //
+        int non;
+        char **a;
+
+        // memory allocation //
+        non = 5;
+        a = (char**)calloc(non, sizeof(char*));
+        for(i=0; i<non; i++)
+                a[i] = (char*)calloc(wsize, sizeof(char));
+
+        // define nodes //
+        sprintf(a[0], "a");
+        sprintf(a[1], "b");
+        sprintf(a[2], "c");
+        sprintf(a[3], "d");
+        sprintf(a[4], "e");
+
+        // combination implementation //
+        printf("combination from nodes\n");
+        combination_nodes(a, non, 4);
+
+        // reset and return //
+        for(i=0; i<non; i++)
+                free(a[i]);
+        free(a);
+
+
+        ////////////////////////
+        // cliques from links //
+        ////////////////////////
+
+        // variables //
+        int nol, noc;
+        char ***b;
+
+        // memory allocation //
+        nol = 10;
+        noc = 2;
+        b = (char***)calloc(nol, sizeof(char**));
+        for(i=0; i<nol; i++) {
+                b[i] = (char**)calloc(noc, sizeof(char*));
+                for(j=0; j<noc; j++)
+                        b[i][j] = (char*)calloc(wsize, sizeof(char));
+        }
+
+        // define links //
+        sprintf(b[0][0], "a");
+        sprintf(b[0][1], "b");
+        sprintf(b[1][0], "a");
+        sprintf(b[1][1], "c");
+        sprintf(b[2][0], "a");
+        sprintf(b[2][1], "d");
+        sprintf(b[3][0], "a");
+        sprintf(b[3][1], "e");
+        sprintf(b[4][0], "b");
+        sprintf(b[4][1], "c");
+        sprintf(b[5][0], "b");
+        sprintf(b[5][1], "d");
+        sprintf(b[6][0], "b");
+        sprintf(b[6][1], "e");
+        sprintf(b[7][0], "c");
+        sprintf(b[7][1], "d");
+        sprintf(b[8][0], "c");
+        sprintf(b[8][1], "e");
+        sprintf(b[9][0], "d");
+        sprintf(b[9][1], "e");
+
+        printf("R-cliques from links\n");
+        cliques_links(b, nol, 4);
+
+        printf("R-cliques from links\n");
+        cliques_links(b, nol, 3);
+
+        // reset and return //
+        for(i=0; i<nol; i++) {
+                for(j=0; j<noc; j++)
+                        free(b[i][j]);
+                free(b[i]);
+        }
+        free(b);
+
+        return 0;
+}
+
+
+int init_stack(int *TOP)
+{
+        *TOP = 0;
+        return 0;
+}
+
+
+int push(char **S, int R, int *TOP, char *VAL)
+{
+        if(*TOP > R-1)
+                printf("error: stack overflow\n");
+
+        else
+                strcpy(S[(*TOP)++], VAL);
+
+        return 0;
+}
+
+
+char *pop(char **S, int *TOP)
+{
+        if(*TOP <= 0) {
+                printf("error: stack underflow\n");
+                return 0;
+        }
+
+        else {
+                char *output;
+                output = (char*)calloc(wsize, sizeof(char));
+                strcpy(output, S[--(*TOP)]);
+                sprintf(S[*TOP], "NA");
+                return output;
+        }
+}
+
+
+int print_stack(char **S, int TOP)
+{
+        if(TOP <= 0)    printf("error: no objects in stack\n");
+
+        else {
+                int j;
+                for(j=0; j<TOP-1; j++)  printf("%s\t", S[j]);
+                printf("%s\n", S[j]);
+        }
+
+        return 0;
+}
+
+
+int cliques_links(char ***links, int L, int R)
+{
+        // variables //
+        int iteration;
+        int dum, dummer1, dummer2, dummy, dummier;
+        int i, j, k;
+
+        int top, temptop;
+        char **stack;
+        char *node;
+        int *index;
+        int nums, numt, *numu;
+
+        int CRIT = R * (R-1) / 2;
+
+        // memory allocation //
+        stack = (char**)calloc(R, sizeof(char*));
+        for(i=0; i<R; i++)
+                stack[i] = (char*)calloc(wsize, sizeof(char));
+
+        node = (char*)calloc(wsize, sizeof(char));
+
+        index = (int*)calloc(R, sizeof(int));
+        numu = (int*)calloc(R, sizeof(int));
+
+        // implementation //
+        init_stack(&top);
+        i = -1;
+        nums = 0;
+
+        dummier = 0;
+        iteration = 0;
+        while(1) {
+                // print //
+                if(top == R) {
+                        numt=0;
+                                for(k=0; k<R; k++)
+                                        numt+=numu[k];
+
+                        if(nums + numt == CRIT) {
+                                print_stack(stack, top);
+                                if(index[top-1] == 0) {
+                                        pop(stack, &top);
+                                        pop(stack, &top);
+                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                        nums--;
+                                }
+
+                                else {
+                                        pop(stack, &top);
+                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                        nums--;
+                                }
+
+                                i = index[top];
+                        }
+                }
+
+                // reduction //
+                if(i >= L-1) {
+                        temptop = top;
+
+                        numt = 0;
+                        for(k=0; k<R; k++)
+                                numt += numu[k];
+
+                        if(index[top-1] == 0) {
+                                pop(stack, &top);
+                                pop(stack, &top);
+                                for(k=top; k<R; k++)    numu[k] = 0;
+                                nums--;
+                        }
+
+                        else {
+                                pop(stack, &top);
+                                for(k=top; k<R; k++)    numu[k] = 0;
+                                nums--;
+                        }
+
+                        dummy = 0;
+
+                        while(dummy == 0) {
+                                if(index[temptop-1] == 0) {
+                                        if(index[temptop-1-1] >= L - CRIT + nums + numt) {
+                                                temptop = top;
+
+                                                numt = 0;
+                                                for(k=0; k<R; k++)
+                                                        numt += numu[k];
+
+                                                if(index[top-1] == 0) {
+                                                        pop(stack, &top);
+                                                        pop(stack, &top);
+                                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                                        nums--;
+                                                }
+
+
+                                                else {
+                                                        pop(stack, &top);
+                                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                                        nums--;
+                                                }
+                                        }
+
+                                        else
+                                                dummy++;
+                                }
+
+                                else {
+                                        if(index[temptop-1] >= L - CRIT + nums + numt) {
+                                                temptop = top;
+
+                                                numt = 0;
+                                                for(k=0; k<R; k++)
+                                                        numt += numu[k];
+
+                                                if(index[top-1] == 0) {
+                                                        pop(stack, &top);
+                                                        pop(stack, &top);
+                                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                                        nums--;
+                                                }
+
+                                                else {
+                                                        pop(stack, &top);
+                                                        for(k=top; k<R; k++)    numu[k] = 0;
+                                                        nums--;
+                                                }
+                                        }
+
+                                        else
+                                                dummy++;
+                                }
+
+                                if(dummy > 0)
+                                        break;
+
+                                if(index[0]>L-CRIT-1) {
+                                        dummier++;
+                                        break;
+                                }
+                        }
+
+                        i = index[top];
+                }
+
+                // indexing //
+                i++;
+
+                // termination //
+                if(dummier > 0)
+                        break;
+
+                // addition //
+                dummer1 = 0;
+                for(j=0; j<top; j++) {
+                        if(strcmp(stack[j], links[i][0]) == 0) {
+                                dummer1++;
+                                break;
+                        }
+                }
+
+                dummer2 = 0;
+                for(j=0; j<top; j++) {
+                        if(strcmp(stack[j], links[i][1]) == 0) {
+                                dummer2++;
+                                break;
+                        }
+                }
+
+                if(dummer1!=0 && dummer2!=0) {
+                        numu[top-1]++;
+                }
+
+                if(dummer1!=0 && dummer2==0) {
+                        if(top < R) {
+                                index[top] = i;
+                                nums++;
+                                push(stack, R, &top, links[i][1]);
+                        }
+                }
+
+                if(dummer1==0 && dummer2!=0) {
+                        if(top < R) {
+                                index[top] = i;
+                                nums++;
+                                push(stack, R, &top, links[i][0]);
+                        }
+                }
+
+                if(dummer1==0 && dummer2==0) {
+                        if(top < R-1) {
+                                index[top] = i;
+                                index[top+1] = 0;
+                                nums++;
+                                push(stack, R, &top, links[i][0]);
+                                push(stack, R, &top, links[i][1]);
+                        }
+                }
+        }
+
+        // reset and return //
+        free(numu);
+        free(index);
+
+        free(node);
+
+        for(i=0; i<R; i++)
+                free(stack[i]);
+        free(stack);
+
+        return 0;
+}
