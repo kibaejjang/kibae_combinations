@@ -1,0 +1,318 @@
+int rolling_cliques(char ***cliques, int L, int R, char *ODPW, char *OFN, char *OEXT, char *OSEP)
+{
+        printf("rolling_cliques: L=%d\tR=%d\n", L, R);  // for monitor
+
+        // variables //
+        int dummier, dummy, dummer1, dummer2, dum, num;
+        int i, j, k, u, v;
+
+        char *fwname;
+        FILE *fw;
+
+        int nol, noc, tnol, cieling;
+        char ***pairs, ***tpairs;
+        char **nodes;
+
+        int *crite;
+        int *clust, clsnum;
+
+        // initialize memory //
+        nol = L;
+        noc = R + R;
+
+        pairs = (char***)calloc(nol, sizeof(char**));
+        for(i=0; i<nol; i++) {
+                pairs[i] = (char**)calloc(noc, sizeof(char*));
+                for(j=0; j<noc; j++)
+                        pairs[i][j] = (char*)calloc(wsize, sizeof(char));
+        }
+
+        nodes = (char**)calloc(L, sizeof(char*));
+        for(i=0; i<L; i++)
+                nodes[i] = (char*)calloc(wsize, sizeof(char));
+
+        clust = (int*)calloc(L, sizeof(int));
+
+        // list up pairs of cliques that rolls //
+        num = 0;
+        for(i=1; i<L; i++) {
+                for(j=0; j<i; j++) {
+                        // memory re-allocation //
+                        if(num > nol-1) {
+                                tnol = nol + L;
+
+                                tpairs = (char***)calloc(tnol, sizeof(char**));
+                                for(u=0; u<tnol; u++) {
+                                        tpairs[u] = (char**)calloc(noc, sizeof(char*));
+                                        for(v=0; v<noc; v++)
+                                                tpairs[u][v] = (char*)calloc(wsize, sizeof(char));
+                                }
+
+                                for(u=0; u<nol; u++)
+                                        for(v=0; v<noc; v++)
+                                                strcpy(tpairs[u][v], pairs[u][v]);
+
+                                for(u=0; u<nol; u++) {
+                                        for(v=0; v<noc; v++)
+                                                free(pairs[u][v]);
+                                        free(pairs[u]);
+                                }
+                                free(pairs);
+
+                                nol = tnol;
+
+                                pairs = (char***)calloc(nol, sizeof(char**));
+                                for(u=0; u<nol; u++) {
+                                        pairs[u] = (char**)calloc(noc, sizeof(char*));
+                                        for(v=0; v<noc; v++)
+                                                pairs[u][v] = (char*)calloc(wsize, sizeof(char));
+                                }
+
+                                for(u=0; u<nol; u++)
+                                        for(v=0; v<noc; v++)
+                                                strcpy(pairs[u][v], tpairs[u][v]);
+
+
+                                for(u=0; u<tnol; u++) {
+                                        for(v=0; v<noc; v++)
+                                                free(tpairs[u][v]);
+                                        free(tpairs[u]);
+                                }
+                                free(tpairs);
+                        }
+
+                        // compare R-cliques that rolls //
+                        dum = 0;
+
+                        for(u=0; u<R; u++) {
+                                for(v=0; v<R; v++) {
+                                        if(strcmp(cliques[i][u], cliques[j][v]) == 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+                        }
+
+                        if(dum == R-1) {
+                                for(u=0; u<R; u++) {
+                                        strcpy(pairs[num][u], cliques[i][u]);
+                                        strcpy(pairs[num][u+R], cliques[j][u]);
+                                }
+
+                                num++;
+                        }
+                }
+        }
+
+        cieling = num;
+
+        // open output file //
+        fwname = (char*)calloc(fnsize, sizeof(char));
+        sprintf(fwname, "%s/%s.%s", ODPW, OFN, OEXT);
+        fw = fopen(fwname, "w");
+
+        // header //
+        fprintf(fw, "clstnr%s", OSEP);
+        fprintf(fw, "node\n");
+
+
+        // allocate clsnum to cliques to write //
+        clsnum = 0;
+        dummy = 0;
+        num = 0;
+
+        // first clique links //
+        clsnum++;
+        i=0;
+
+        for(u=0; u<R; u++) {
+                strcpy(nodes[num], pairs[i][u]);
+                num++;
+        }
+
+        for(u=R; u<R+R; u++) {
+                dum = 0;
+                for(v=0; v<num; v++) {
+                        if(strcmp(pairs[i][u], nodes[v]) == 0) {
+                                dum++;
+                                break;
+                        }
+                }
+
+                if(dum == 0) {
+                        strcpy(nodes[num], pairs[i][u]);
+                        num++;
+                }
+        }
+
+        // next clique links //
+        for(i=1; i<cieling; i++) {
+                if(i%1000 == 0) printf("rolling_cliques: %d / %d\n", i, cieling);       // for monitor
+                dummer1 = 0;
+                dummer2 = 0;
+
+                for(j=dummy; j<i; j++) {
+                        // compare i former with j //
+                        dum = 0;
+                        for(u=0; u<R; u++) {
+                                if(strcmp(pairs[i][u], pairs[j][u]) != 0) {
+                                        dum++;
+                                        break;
+                                }
+                        }
+
+                        if(dum == 0) {
+                                dummer1++;
+                                break;
+                        }
+
+                        else {
+                                dum = 0;
+                                for(u=0; u<R; u++) {
+                                        if(strcmp(pairs[i][u], pairs[j][u+R]) != 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+
+                                if(dum == 0) {
+                                        dummer1++;
+                                        break;
+                                }
+                        }
+
+
+                        // compare i latter with j //
+                        dum = 0;
+                        for(u=0; u<R; u++) {
+                                if(strcmp(pairs[i][u+R], pairs[j][u]) != 0) {
+                                        dum++;
+                                        break;
+                                }
+                        }
+
+                        if(dum == 0) {
+                                dummer2++;
+                                break;
+                        }
+
+                        else {
+                                dum = 0;
+                                for(u=0; u<R; u++) {
+                                        if(strcmp(pairs[i][u+R], pairs[j][u+R]) != 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+
+                                if(dum == 0) {
+                                        dummer2++;
+                                        break;
+                                }
+                        }
+                }
+
+
+                // if pairs i former is connected //
+                if(dummer1 > 0) {
+                        for(u=R; u<R+R; u++) {
+                                dum = 0;
+                                for(v=0; v<num; v++) {
+                                        if(strcmp(pairs[i][u], nodes[v]) == 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+
+                                if(dum == 0) {
+                                        strcpy(nodes[num], pairs[i][u]);
+                                        num++;
+                                }
+                        }
+                }
+
+                // if pairs i latter is connected //
+                if(dummer2 > 0) {
+                        for(u=0; u<R; u++) {
+                                dum = 0;
+                                for(v=0; v<num; v++) {
+                                        if(strcmp(pairs[i][u], nodes[v]) == 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+
+                                if(dum == 0) {
+                                        strcpy(nodes[num], pairs[i][u]);
+                                        num++;
+                                }
+                        }
+                }
+
+
+                // if pairs i is not connected //
+                if(dummer1==0 && dummer2==0) {
+                        for(u=0; u<num; u++) {
+                                fprintf(fw, "%d%s", clsnum, OSEP);
+                                fprintf(fw, "%s\n", nodes[u]);
+                        }
+
+                        dummy = i;
+                        num = 0;
+                        clsnum++;
+
+                        for(u=0; u<R; u++) {
+                                strcpy(nodes[num], pairs[i][u]);
+                                num++;
+                        }
+
+                        for(u=R; u<R+R; u++) {
+                                dum = 0;
+                                for(v=0; v<num; v++) {
+                                        if(strcmp(pairs[i][u], nodes[v]) == 0) {
+                                                dum++;
+                                                break;
+                                        }
+                                }
+
+                                if(dum == 0) {
+                                        strcpy(nodes[num], pairs[i][u]);
+                                        num++;
+                                }
+                        }
+                }
+        }
+
+
+        // last clique links //
+        if(dummer1>0 || dummer2>0) {
+                for(u=0; u<num; u++) {
+                        fprintf(fw, "%d%s", clsnum, OSEP);
+                        fprintf(fw, "%s\n", nodes[u]);
+                }
+
+                num = 0;
+                clsnum++;
+        }
+
+        // close output file //
+        fclose(fw);
+        free(fwname);
+
+        // reset and return //
+        free(crite);
+        free(clust);
+
+        for(i=0; i<L; i++)
+                free(nodes[i]);
+        free(nodes);
+
+        for(i=0; i<nol; i++) {
+                for(j=0; j<noc; j++)
+                        free(pairs[i][j]);
+                free(pairs[i]);
+        }
+        free(pairs);
+
+        return 0;
+}
