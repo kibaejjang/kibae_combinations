@@ -1,13 +1,16 @@
-int rolling_cliques(char ***cliques, int L, int R, char *ODPW, char *OFN, char *OEXT, char *OSEP)
+// this function lists up the nodes for each cluster, analyzed by cpm that Palla et al. (2007, Nature 446: 664-667) has introduced when L R-cliques are given. //
+
+#include<stdio.h>
+#include<string.h>
+#include<malloc.h>
+
+int rolling_cliques(char ***cliques, int L, int R)
 {
         printf("rolling_cliques: L=%d\tR=%d\n", L, R);  // for monitor
 
         // variables //
         int dummier, dummy, dummer1, dummer2, dum, num;
         int i, j, k, u, v;
-
-        char *fwname;
-        FILE *fw;
 
         int nol, noc, tnol, cieling;
         char ***pairs, ***tpairs;
@@ -106,14 +109,9 @@ int rolling_cliques(char ***cliques, int L, int R, char *ODPW, char *OFN, char *
 
         cieling = num;
 
-        // open output file //
-        fwname = (char*)calloc(fnsize, sizeof(char));
-        sprintf(fwname, "%s/%s.%s", ODPW, OFN, OEXT);
-        fw = fopen(fwname, "w");
-
         // header //
-        fprintf(fw, "clstnr%s", OSEP);
-        fprintf(fw, "node\n");
+        printf("clstnr\t");
+        printf("node\n");
 
 
         // allocate clsnum to cliques to write //
@@ -253,8 +251,8 @@ int rolling_cliques(char ***cliques, int L, int R, char *ODPW, char *OFN, char *
                 // if pairs i is not connected //
                 if(dummer1==0 && dummer2==0) {
                         for(u=0; u<num; u++) {
-                                fprintf(fw, "%d%s", clsnum, OSEP);
-                                fprintf(fw, "%s\n", nodes[u]);
+                                printf("%d\t", clsnum);
+                                printf("%s\n", nodes[u]);
                         }
 
                         dummy = i;
@@ -287,17 +285,13 @@ int rolling_cliques(char ***cliques, int L, int R, char *ODPW, char *OFN, char *
         // last clique links //
         if(dummer1>0 || dummer2>0) {
                 for(u=0; u<num; u++) {
-                        fprintf(fw, "%d%s", clsnum, OSEP);
-                        fprintf(fw, "%s\n", nodes[u]);
+                        printf("%d\t", clsnum);
+                        printf("%s\n", nodes[u]);
                 }
 
                 num = 0;
                 clsnum++;
         }
-
-        // close output file //
-        fclose(fw);
-        free(fwname);
 
         // reset and return //
         free(crite);
